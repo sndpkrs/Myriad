@@ -1,0 +1,10 @@
+﻿@model List<Myriad.Models.CheckActorsModel>
+
+
+@for (int i = 0; i < Model.Count(); i++)
+{
+    @Html.EditorFor(a => a[i].isChecked);
+    @Html.DisplayFor(a => a[i].Name);
+    @Html.HiddenFor(a => a[i].Name);
+    @Html.HiddenFor(a => a[i].id);
+}
