@@ -10,7 +10,7 @@
     <script type="text/javascript" src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
     <script>
         $(document).ready(function () {
-            $("#qq").click(function () {
+            $("#refresh").click(function () {
                 //alert("AJAX request successfully completed");
 
                 //$("#dvMovie").load('/Movies/CreateMoviesPartialView')
@@ -39,7 +39,7 @@
 <div id="core">
     <h4>Add To Catalogue</h4>
 
-    <input id="qq" type="button" value=" Refresh " />
+    <input id="refresh" type="button" value=" Refresh " />
 
     <div id="dvMovie">
         @using (Html.BeginForm("CreateAllAction", "Movies", FormMethod.Post, new { enctype = "multipart/form-data" }))
