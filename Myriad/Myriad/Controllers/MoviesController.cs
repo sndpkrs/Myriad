@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -30,6 +30,54 @@ namespace Myriad.Controllers
             _result.Add(new SelectListItem { Value = "2", Text = "Female" });
             _result.Add(new SelectListItem { Value = "3", Text = "Others" });
             return _result;
+        }
+
+        public string UploadAndRetreieveUrl(HttpPostedFileBase file)
+        {
+            var additive = DateTime.Now.Millisecond.ToString();
+            string keyname = Path.GetFileNameWithoutExtension(file.FileName);
+
+            try
+            {
+                IAmazonS3 client;
+                using (client = Amazon.AWSClientFactory.CreateAmazonS3Client(_awsAccessKey, _awsSecretKey))
+                {
+                    var request = new PutObjectRequest()
+                    {
+                        BucketName = _bucketName,
+                        CannedACL = S3CannedACL.PublicRead,//PERMISSION TO FILE PUBLIC ACCESIBLE
+                        //Key = string.Format("UPLOADS/{0}", file.FileName),
+                        Key = string.Format("UPLOADS/{0}", keyname + additive + ".jpg"),
+                        InputStream = file.InputStream//SEND THE FILE STREAM
+                    };
+
+                    client.PutObject(request);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            string ImageUrl = "https://" + "s3-us-west-2.amazonaws.com/myriadposterappharbour/UPLOADS/" + keyname + additive + ".jpg";
+            return ImageUrl;
+        }
+
+        public List<CheckActorsModel> GetAactorsCheckList()
+        {
+            var results = from a in db.Actors
+                          select new
+                          {
+                              a.ActID,
+                              a.Name,
+                              Checked = false
+                          };
+
+            var actorsList = new List<CheckActorsModel>();
+
+            foreach (var item in results)
+            {
+                actorsList.Add(new CheckActorsModel { id = item.ActID, Name = item.Name, isChecked = item.Checked });
+            }
+            return actorsList;
         }
         // GET: Movies
         public ActionResult Index()
@@ -120,82 +168,7 @@ namespace Myriad.Controllers
 
 
 
-        public ActionResult CreateMovies()
-        {
-            List<SelectListItem> listSelectListItems = new List<SelectListItem>();
-
-            foreach (Actor actor in db.Actors)
-            {
-                SelectListItem selectList = new SelectListItem()
-                {
-                    Text = actor.Name,
-                    Value = actor.ActID.ToString(),
-                    Selected = false
-                };
-                listSelectListItems.Add(selectList);
-            }
-
-            ExampleViewModel mvModel = new ExampleViewModel()
-            {
-                ActorsList = listSelectListItems
-            };
-
-            var results = from a in db.Actors
-                          select new
-                          {
-                              a.ActID,
-                              a.Name,
-                              Checked = false
-                          };
-
-            var moviewView = new MovieViewModel();
-
-            var actorsList = new List<CheckActorsModel>();
-
-            foreach (var item in results)
-            {
-                actorsList.Add(new CheckActorsModel { id = item.ActID, Name = item.Name, isChecked = item.Checked });
-
-            }
-            moviewView.ActorsList = actorsList;
-            ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name");
-            ViewBag.ActList = new MultiSelectList(actorsList, "ActList", "Name");
-            return View(mvModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult CreateMovies(ExampleViewModel mvModel)
-        {
-            var movie = new Movie();
-            movie.Name = mvModel.Name;
-            movie.Plot = mvModel.Plot;
-            movie.Poster = mvModel.Poster;
-            movie.ReleaseDate = mvModel.ReleaseDate;
-            movie.ProID = mvModel.ProID;
-            if (ModelState.IsValid)
-            {
-                //foreach (var item in db.MovieActors)
-                //{
-                //    if (item.MovID == movie.MovID)
-                //        db.Entry(item).State = System.Data.Entity.EntityState.Deleted;
-                //}
-                db.Movies.Add(movie);
-                foreach (var item in mvModel.SelectedActorsIdList)
-                {
-
-                    db.MovieActors.Add(new MovieActor() { MovID = movie.MovID, ActID = item });
-                }
-
-
-
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-
-            ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", movie.ProID);
-            return View(movie);
-        }
+        
 
 
 
@@ -310,18 +283,18 @@ namespace Myriad.Controllers
             return RedirectToAction("Index");
         }
 
-        public PartialViewResult CreateActorPartialView(int? id)
+        //[ActionName("CreateActor")]
+        public PartialViewResult CreateActorPartialView()
         {
             ActorsViewModels actor = new ActorsViewModels();
             Movie movie = new Movie();
             ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", movie.ProID);
-            var a = new SelectList(MoviesController.GetGender(), "Value", "Text", actor.Sex);
-
             ViewBag.Sex = new SelectList(MoviesController.GetGender(), "Value", "Text", actor.Sex);
             return PartialView("CreateActorPartialView");
         }
 
         [HttpPost]
+        //,ActionName("CreateActor")
         public ActionResult CreateActorPartialView(ActorsViewModels actorModel)
         {
 
@@ -338,10 +311,11 @@ namespace Myriad.Controllers
 
                 return Content("Actor Added Successfully");
             }
-
+            ViewBag.Sex = new SelectList(MoviesController.GetGender(), "Value", "Text", actorModel.Sex);
             return View(actorModel);
         }
 
+        //[ActionName("CreateProducer")]
         public PartialViewResult CreateProducerPartialView()
         {
             Producer pro = new Producer();
@@ -351,20 +325,29 @@ namespace Myriad.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateProducerPartialView(Producer producer)
+        //[ActionName("CreateProducer")]
+        public ActionResult CreateProducerPartialView(ProducerViewModel producerModel)
         {
             if (ModelState.IsValid)
             {
+                Producer producer = new Producer();
+                producer.Name = producerModel.Name;
+                producer.Sex = (byte)producerModel.Sex;
+                producer.Bio = producerModel.Bio;
+                producer.DOB = producerModel.DOB;
+                
                 db.Producers.Add(producer);
                 db.SaveChanges();
+                
                 return Content("Producer Added Successfully");
             }
-
-            return View(producer);
+            ViewBag.Sex = new SelectList(MoviesController.GetGender(), "Value", "Text",producerModel.Sex);
+            return View(producerModel);
         }
 
         //third trial
 
+        //ActionName("AddMovie")]
         public PartialViewResult CreateMoviesPartialView(int? id)
         {
             var movieModel = new MovieViewModel();
@@ -376,6 +359,7 @@ namespace Myriad.Controllers
         }
         //fghjhvm
         [HttpPost]
+        //[ActionName("AddMovie")]
         public ActionResult CreateMoviesPartialView(MovieViewModel mvModel, List<CheckActorsModel> caModel, HttpPostedFileBase file)
         {
             var movie = new Movie();
@@ -446,16 +430,87 @@ namespace Myriad.Controllers
             CreateAll c = new CreateAll();
             c.movieModel = mvModel;
             ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", movie.ProID);
+            TempData["doc"] = c;
+            return RedirectToAction("AddToCatalogue",c);
+            //return View(mvModel);
+        }
+
+        //[ActionName("CreateCatalogue")]
+        public ActionResult CreateAllAction()
+        {
+            
+            var movieModel = new MovieViewModel();
+            
+            movieModel.ActorsList = GetAactorsCheckList();
+            ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", movieModel.ProID);
+
+            return View(movieModel);
+        }
+
+        
+
+        [HttpPost]
+        //[ActionName("CreateCatalogue")]
+        public ActionResult CreateAllAction(MovieViewModel mvModel,int ProID, List<CheckActorsModel> caModel, HttpPostedFileBase file)
+        {
+            var movie = new Movie();
+            movie.Name = mvModel.Name;
+            movie.Plot = mvModel.Plot;
+            movie.Producer = mvModel.Producer;
+            movie.ReleaseDate = mvModel.ReleaseDate;
+            movie.ProID = mvModel.ProID = ProID;
+            mvModel.ActorsList = caModel;
+            if (ModelState.IsValid)
+            {
+                movie.Poster = UploadAndRetreieveUrl(file);
+                db.Movies.Add(movie);
+                if (mvModel.ActorsList != null)
+                {
+                    foreach (var item in mvModel.ActorsList)
+                    {
+                        if (item.isChecked)
+                            db.MovieActors.Add(new MovieActor() { MovID = movie.MovID, ActID = item.id });
+                    }
+                }
+
+                db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            
+            ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", movie.ProID);
+
             return View(mvModel);
         }
 
 
+        //[ActionName("CreateEverything")]
         public ActionResult AddToCatalogue()
         {
+            if (TempData["doc"] != null)
+            {
+                CreateAll newC = (CreateAll) TempData["doc"];
+                ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", newC.movieModel.ProID);
+                return View(newC);
+            }
             var model = new CreateAll();
             model.actor = new Actor();
             model.movieModel = new MovieViewModel();
             model.producer = new Producer();
+
+            model.movieModel.ActorsList = GetAactorsCheckList();
+            ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", model.movieModel.ProID);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        //[ActionName("CreateEverything")]
+        public ActionResult AddToCatalogue(CreateAll c)
+        {
+            var model = new CreateAll();
+            model.actor = c.actor;
+            model.movieModel = c.movieModel;
+            model.producer = c.producer;
 
             model.movieModel.ActorsList = GetAactorsCheckList();
             ViewBag.ProID = new SelectList(db.Producers, "ProID", "Name", model.movieModel.ProID);
@@ -471,24 +526,8 @@ namespace Myriad.Controllers
             return View(actorsList);
         }
 
-        public List<CheckActorsModel> GetAactorsCheckList()
-        {
-            var results = from a in db.Actors
-                          select new
-                          {
-                              a.ActID,
-                              a.Name,
-                              Checked = false
-                          };
 
-            var actorsList = new List<CheckActorsModel>();
 
-            foreach (var item in results)
-            {
-                actorsList.Add(new CheckActorsModel { id = item.ActID, Name = item.Name, isChecked = item.Checked });
-            }
-            return actorsList;
-        }
 
 
         protected override void Dispose(bool disposing)
