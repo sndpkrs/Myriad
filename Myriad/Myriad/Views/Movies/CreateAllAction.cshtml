@@ -1,141 +1,146 @@
-﻿
-@model Myriad.Models.CreateAll
+@model Myriad.Models.MovieViewModel
+
 @{
-    ViewBag.Title = "CreateAllAction";
-    var actorsList = (IEnumerable<Myriad.Models.CheckActorsModel>)ViewBag.actorsList;
+    ViewBag.Title = "AddToCatalogue";
 }
 
-<h2>CreateAllAction</h2>
-@using (Html.BeginForm("CreateMovies", "Movies", FormMethod.Post, new { id = "loginForm" }))
+@section scripts
 {
-    
-    @Html.AntiForgeryToken()
-    <div class="form-horizontal">
-        <h4>Movie</h4>
-        <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.Name, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.movieModel.Name, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.movieModel.Name, "", new { @class = "text-danger" })
-            </div>
-        </div>
+    <script type="text/javascript" src="~/Scripts/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#qq").click(function () {
+                //alert("AJAX request successfully completed");
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.ReleaseDate, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.movieModel.ReleaseDate, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.movieModel.ReleaseDate, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.Plot, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.movieModel.Plot, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.movieModel.Plot, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.Poster, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.movieModel.Poster, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.movieModel.Poster, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.ProID, "ProID", htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.DropDownList("ProID", null, htmlAttributes: new { @class = "form-control" })
-                @Html.ValidationMessageFor(model => model.movieModel.ProID, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.ActorsList, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-               @foreach (var p in actorsList)
-               {
-                @Html.CheckBox(p.Name, false, new { value = p.id });
-                   @Html.DisplayFor(a=>p.Name)
-               }
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Add" class="btn btn-default" />
-            </div>
-        </div>
-    </div>}
+                //$("#dvMovie").load('/Movies/CreateMoviesPartialView')
+                $.ajax({
+                    url: '@Url.Action("CreateMoviesPartialView", "Movies")',//controller name and action
+                    type: 'GET',
+                    success: function (data) {
+                        $("#core").load('/Movies/CreateAllAction')
+                    }
+                    //information for search
+                })
 
 
-@*@using (Html.BeginForm("CreateMovies", "Movies", FormMethod.Post, new { id = "registerForm" }))
-{
-    @Html.AntiForgeryToken()
-    <div class="form-horizontal">
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.movieModel, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.movieModel, "", new { @class = "text-danger" })
-            </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.movieModel.ActorsList, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @foreach (var p in actorsList)
-                {
-                    @Html.CheckBox(p.Name, false, new { value = p.id });
-                    @Html.DisplayFor(a => p.Name)
-                }
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Add" class="btn btn-default" />
-            </div>
-        </div>
-    </div>
-}*@
+            });
+            $("body").on('DOMSubtreeModified', 'divProducer', function () {
+                alert("Changed");
+            });
+        });
 
-
-
-
-    @using (Html.BeginForm("Create", "Actors", FormMethod.Post, new { id = "registerForm" }))
-    {
-        @Html.AntiForgeryToken()
-        <div class="form-horizontal">
-            <div class="form-group">
-                @Html.LabelFor(model => model.actor, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.actor, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.actor, "", new { @class = "text-danger" })
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-md-offset-2 col-md-10">
-                    <input type="submit" value="Add" class="btn btn-default" />
-                </div>
-            </div>
-        </div>
+        function SuccessCallback(data) {
+            alert(data);
         }
 
-        @using (Html.BeginForm("Create", "Producers", FormMethod.Post, new { id = "loginForm" }))
-{
+    </script>
+}
+<div id="core">
+    <h4>Add To Catalogue</h4>
+
+    <input id="qq" type="button" value=" Refresh " />
+
+    <div id="dvMovie">
+        @using (Html.BeginForm("CreateAllAction", "Movies", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
             @Html.AntiForgeryToken()
 
-            <div class="col-md-10">
-                @Html.EditorFor(m => Model.producer)
-            </div>
-            <div class="form-group">
-                <div class="col-md-offset-2 col-md-10">
-                    <input type="submit" value="Add" class="btn btn-default" />
+            <div class="form-horizontal">
+                <h4>Movie</h4>
+                <hr />
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @Html.HiddenFor(model => model.MovID)
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.ReleaseDate, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.ReleaseDate, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.ReleaseDate, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Plot, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Plot, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Plot, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Poster, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        <input type="file" name="file" id="file" />
+                        @Html.ValidationMessageFor(model => model.Poster, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.ProID, "ProID", htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.DropDownList("ProID", null, htmlAttributes: new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.ProID, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.ActorsList, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @if (Model.ActorsList != null)
+                        {
+                            <div id="ActorsPartial">
+                                @Html.Partial("CheckActorsPartialView", Model.ActorsList)
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="Add To Library" class="btn btn-default" />
+                    </div>
                 </div>
             </div>
-}
+        }
 
+    </div>
 
+    <table class="table">
+        <tr>
+            <th>
+                @Ajax.ActionLink("Add Actor", "CreateActorPartialView", new AjaxOptions
+            {
+                HttpMethod = "GET",
+                UpdateTargetId = "divActor",
+                InsertionMode = InsertionMode.Replace
+            })
+            </th>
+            <th>
+                @Ajax.ActionLink("Add Producer", "CreateProducerPartialView", new AjaxOptions
+            {
+                HttpMethod = "GET",
+                UpdateTargetId = "divProducer",
+                InsertionMode = InsertionMode.Replace
+            })
+            </th>
+        </tr>
+        <tr>
+            <td>
+                <div id="divActor"></div>
+            </td>
+            <td>
+                <div id="divProducer"></div>
+            </td>
+        </tr>
+    </table>
+</div>
 
