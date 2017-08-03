@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Myriad.Models.MovieViewModel>
+@model IEnumerable<Myriad.Models.MovieViewModel>
 
 @{
     ViewBag.Title = "Index";
@@ -7,7 +7,7 @@
 <h2>Catalogue</h2>
 
 <p>
-    @Html.ActionLink("Add to the Catalogue", "AddToCatalogue")
+    @Html.ActionLink("Add to the Catalogue", "CreateAllAction")
 </p>
 <table class="table">
     <tr>
@@ -45,7 +45,10 @@
             @Html.DisplayFor(modelItem => item.Plot)
         </td>
         <td>
-            <img width="100" height="100" src=@Url.Content(item.Poster) alt="Can't Load Image'" />
+            @if (item.Poster != null)
+            {
+                <img width="100" height="100" src=@Url.Content(item.Poster) alt="Can't Load Image'" />
+            }
             
         </td>
         <td>
